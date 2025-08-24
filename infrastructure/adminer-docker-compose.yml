@@ -1,3 +1,9 @@
+#
+# Adminer service for production
+#
+# Usage:
+# docker compose -f .\infrastructure\adminer-docker-compose.yml --env-file .\config\.env.production up 
+#
 services:
   
   production-db-admin:
