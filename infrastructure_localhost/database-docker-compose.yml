@@ -1,0 +1,24 @@
+#
+# Template to create the database
+#
+# Usage:
+# docker compose -f .\infrastructure_localhost\database-docker-compose.yml --env-file .\config\.env.localhost up -d
+#
+services:
+  database:
+    image: mariadb:10.9
+    container_name: ${Environment}_database
+    user: root
+    restart: always
+    environment:
+      - "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
+    volumes:
+      - localhost-database-volume:/var/lib/mysql
+    ports:
+      - "${MYSQL_PORT}:3306"
+
+volumes:
+  # docker volume rm localhost-database-volume
+  # docker volume create localhost-database-volume
+  localhost-database-volume:
+    external: true
