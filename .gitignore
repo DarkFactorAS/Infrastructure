@@ -1,0 +1,5 @@
+#
+# Git ignore these files and directories
+#
+.env
+config/**
