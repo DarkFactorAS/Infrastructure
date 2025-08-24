@@ -18,7 +18,7 @@ services:
       - "${MYSQL_PORT}:3306"
 
 volumes:
-  # docker volume rm localhost-database-volume
-  # docker volume create localhost-database-volume
-  localhost-database-volume:
+  # docker volume rm production-database-volume
+  # docker volume create production-database-volume
+  production-database-volume:
     external: true
