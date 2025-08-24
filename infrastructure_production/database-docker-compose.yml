@@ -2,7 +2,7 @@
 # Template to create the database
 #
 # Usage:
-# docker compose -f .\infrastructure_production\database-docker-compose.yml --env-file .\config\.env.production up -d
+# sudo docker compose -f ./infrastructure_production/database-docker-compose.yml --env-file ./config/.env.production up -d
 #
 services:
   database:
@@ -13,12 +13,12 @@ services:
     environment:
       - "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
     volumes:
-      - localhost-database-volume:/var/lib/mysql
+      - production-database-volume:/var/lib/mysql
     ports:
       - "${MYSQL_PORT}:3306"
 
 volumes:
-  # docker volume rm production-database-volume
-  # docker volume create production-database-volume
+  # sudo docker volume rm production-database-volume
+  # sudo docker volume create production-database-volume
   production-database-volume:
     external: true
