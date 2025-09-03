@@ -2,7 +2,7 @@
 # Template to create the database
 #
 # Usage:
-# docker compose -f .\infrastructure_localhost\database-docker-compose.yml --env-file .\config\.env.localhost up -d
+# docker compose -f ./infrastructure_localhost/database-docker-compose.yml --env-file ./config/.env.localhost up -d
 #
 services:
   database:
@@ -12,6 +12,9 @@ services:
     restart: always
     environment:
       - "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
+      - "MYSQL_DATABASE=${MYSQL_DATABASE}"
+      - "MYSQL_USER=${MYSQL_USER}"
+      - "MYSQL_PASSWORD=${MYSQL_PASSWORD}"
     volumes:
       - localhost-database-volume:/var/lib/mysql
     ports:
@@ -21,4 +24,4 @@ volumes:
   # docker volume rm localhost-database-volume
   # docker volume create localhost-database-volume
   localhost-database-volume:
-    external: true
+    external: false
