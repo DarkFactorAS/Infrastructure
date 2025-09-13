@@ -1,0 +1,24 @@
+#
+# Template to create the database
+#
+# Usage:
+# sudo docker compose -f ./infrastructure_staging/database-docker-compose.yml --env-file ./config/.env.staging up -d
+#
+services:
+  database:
+    image: mariadb:10.9
+    container_name: ${Environment}_database
+    user: root
+    restart: always
+    environment:
+      - "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
+    volumes:
+      - staging-database-volume:/var/lib/mysql
+    ports:
+      - "${MYSQL_PORT}:3306"
+
+volumes:
+  # sudo docker volume rm staging-database-volume
+  # sudo docker volume create staging-database-volume
+  staging-database-volume:
+    external: true
