@@ -1,0 +1,18 @@
+#
+# Adminer service for production
+#
+# Usage:
+# docker compose -f ./infrastructure_staging/adminer-docker-compose.yml --env-file ./config/.env.staging up -d
+#
+services:
+  
+  adminer:
+    image: adminer:5.3.0
+    container_name: ${Environment}_adminer
+    restart: always
+
+    environment: 
+      ADMINER_DEFAULT_SERVER: ${MYSQL_SERVER}:${MYSQL_PORT}
+    ports:
+      - "${ADMINER_PORT}:8080"
+
