@@ -1,0 +1,89 @@
+#
+# Build Deploy file for Docker container
+# Change the variables in this section to match your project
+#
+
+#
+# Required GitHub secrets and variables to be set up
+# Organization Secrets:
+#   - NUGET_USERNAME
+#   - NUGET_TOKEN
+#   - DATABASE_SERVER
+# Environment Secrets:
+#   - DATABASE_PORT
+#   - DATABASE_PASSWORD
+# Repository Variables:
+#   - PROJECT_NAME
+#   - DATABASE_USERNAME
+# Environment Variables:
+#   - DATABASE_NAME
+#   - EXTERNAL_PORT
+
+name: Partial Deploy Step
+
+defaults:
+  run:
+    working-directory: .
+
+#
+# Everything below this is template code
+#
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      docker_file:
+        required: false
+        default: "Dockerfile"
+        type: string
+      project_name:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+
+    # Timeout for the job
+    timeout-minutes: 15
+
+    # Static variables used in the workflow
+    env:
+      TIMESTAMP: ${{ github.sha }}
+      INTERNAL_PORT: 3306
+      EXTERNAL_PORT: ${{ secrets.DATABASE_PORT }}
+
+    # To be able to deploy on the local server
+    runs-on: self-hosted
+
+    environment: ${{ inputs.environment }}
+
+    steps:
+
+    - name: Convert Docker name to lowercase
+      id: convert_to_lowercase
+      run: |
+        UPPERCASE_VAR="${{ inputs.project_name }}"
+        DOCKER_NAME="${UPPERCASE_VAR,,}" # The ,, converts to lowercase
+        echo "DOCKER_NAME=$DOCKER_NAME" >> $GITHUB_OUTPUT
+
+    - name: Checkout repository
+      uses: actions/checkout@v4      
+
+    - name: Stop old Docker container
+      run:
+        docker stop ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} || true
+
+    - name: Delete old Docker container
+      run:
+        docker rm ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} || true
+
+    - name: Run Docker container
+      run:
+        docker run -p ${{ env.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} \
+        --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} \
+        --env MARIADB_ROOT_PASSWORD='${{ secrets.DATABASE_PASSWORD }}' \
+        --detach \
+        mariadb:10.4
