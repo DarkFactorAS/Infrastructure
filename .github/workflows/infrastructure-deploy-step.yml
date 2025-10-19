@@ -85,5 +85,5 @@ jobs:
         docker run -p ${{ env.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} 
         --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} 
         --env MARIADB_ROOT_PASSWORD='${{ secrets.DATABASE_PASSWORD }}' 
-        --detach \
+        --detach 
         mariadb:10.4
