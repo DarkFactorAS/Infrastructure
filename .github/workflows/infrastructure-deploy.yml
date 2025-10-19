@@ -30,6 +30,7 @@ on:
 
 jobs:
   staging:
+    if: github.event.inputs.environment == 'staging'
     name: Deploy to Staging
     uses: ./.github/workflows/infrastructure-deploy-step.yml
     with:
