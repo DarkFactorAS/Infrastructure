@@ -80,10 +80,15 @@ jobs:
       run:
         docker rm ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} || true
 
+    - name: Create mariaDB volume
+      run:
+        docker volume create ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-data
+
     - name: Run Docker container
       run:
         docker run -p ${{ env.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} 
         --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} 
+        --volume ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-data:/var/lib/mysql
         --env MARIADB_ROOT_PASSWORD='${{ secrets.DATABASE_PASSWORD }}' 
         --detach 
         mariadb:10.4
