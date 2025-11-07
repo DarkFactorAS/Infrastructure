@@ -90,5 +90,6 @@ jobs:
         --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} 
         --volume ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-data:/var/lib/mysql
         --env MARIADB_ROOT_PASSWORD='${{ secrets.DATABASE_PASSWORD }}' 
+        --restart unless-stopped
         --detach 
         mariadb:10.4
