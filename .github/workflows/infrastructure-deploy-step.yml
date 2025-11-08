@@ -3,22 +3,6 @@
 # Change the variables in this section to match your project
 #
 
-#
-# Required GitHub secrets and variables to be set up
-# Organization Secrets:
-#   - NUGET_USERNAME
-#   - NUGET_TOKEN
-#   - DATABASE_SERVER
-# Environment Secrets:
-#   - DATABASE_PORT
-#   - DATABASE_PASSWORD
-# Repository Variables:
-#   - PROJECT_NAME
-#   - DATABASE_USERNAME
-# Environment Variables:
-#   - DATABASE_NAME
-#   - EXTERNAL_PORT
-
 name: Partial Deploy Step
 
 defaults:
