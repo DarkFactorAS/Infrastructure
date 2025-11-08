@@ -65,8 +65,12 @@ jobs:
 
     - name: Verify secrets
       run: |
-        if [ -z "${{ env.NUGET_USERNAME }}" ] || [ -z "${{ env.NUGET_TOKEN }}" ] || [ -z "${{ vars.DATABASE_SERVER }}" ] || [ -z "${{ env.DATABASE_PORT }}" ] || [ -z "${{ env.DATABASE_PASSWORD }}" ]; then
+        if [ -z "${{ env.NUGET_USERNAME }}" ] || [ -z "${{ env.NUGET_TOKEN }}" ] || [ -z "${{ vars.DATABASE_SERVER }}" ] || [ -z "${{ env.DATABASE_PASSWORD }}" ]; then
           echo "One or more required secrets are not set. Please check the organization and environment secrets."
+          exit 1
+        fi
+        if [ -z "${{ vars.EXTERNAL_PORT }}" ] || [ "${{ vars.EXTERNAL_PORT }}" == "0" ]; then
+          echo "External port is not set or is set to 0. Please check the environment variables."
           exit 1
         fi
 
@@ -83,29 +87,23 @@ jobs:
     # - name: Create config file
     #   uses: bluwy/substitute-string-action@v3
     #   with:
-    #     _input-file: ${{ env.CONFIG_NAME }}
-    #     database: ${{ env.DATABASE_SERVER }}
-    #     DATABASE.SERVER: ${{ env.DATABASE_SERVER }}
-    #     DATABASE.PORT: ${{ env.DATABASE_PORT }}
-    #     DATABASE.USERNAME: ${{ secrets.DATABASE_USERNAME }}
-    #     DATABASE.PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-    #     DATABASE.NAME: ${{ env.DATABASE_NAME }}
-    #     #BUGREPORTSERVER.URL: ${{ env.BUGREPORT_SERVER_URL }}
-    #     ACCOUNTSERVER.URL: ${{ secrets.ACCOUNTSERVER_URL }}
-    #     ACCOUNTSERVER.CLIENTSECRET: ${{ secrets.ACCOUNTSERVER_CLIENTSECRET }}
-    #     _output-file: ${{ env.CONFIG_NAME }}
+    #     _input-file: ${{ inputs.project_path }}/Config/appsettings.Production.json
+    #     _output-file: ${{ inputs.project_path }}/Config/appsettings.Production.json
+    #     INPUT_DATABASE.SERVER: ${{ vars.DATABASE_SERVER }}
+    #     INPUT_DATABASE.PORT: ${{ vars.DATABASE_PORT }}
+    #     INPUT_DATABASE.USERNAME: ${{ secrets.DATABASE_USERNAME }}
+    #     INPUT_DATABASE.PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+    #     INPUT_DATABASE.NAME: ${{ vars.DATABASE_NAME }}
+
+    #     INPUT_ACCOUNTSERVER.URL: ${{ secrets.ACCOUNTSERVER_URL }}
+    #     INPUT_ACCOUNTSERVER.CLIENTSECRET: ${{ secrets.ACCOUNTSERVER_CLIENTSECRET }}
 
     # Replace basic values
     - name: Replace basic values in Dockerfile
       uses: datamonsters/replace-action@v1
       with:
         files: ${{ inputs.project_path }}/Config/appsettings.Production.json
-        replacements: | 
-            DATABASE.SERVER=${{ vars.DATABASE_SERVER }},
-            DATABASE.PORT=${{ env.DATABASE_PORT }},
-            DATABASE.USERNAME=${{ secrets.DATABASE_USERNAME }},
-            DATABASE.PASSWORD=${{ secrets.DATABASE_PASSWORD }},
-            DATABASE.NAME=${{ env.DATABASE_NAME }}
+        replacements: 'DATABASE.SERVER=${{ vars.DATABASE_SERVER }},DATABASE.PORT=${{ vars.DATABASE_PORT }},DATABASE.USERNAME=${{ secrets.DATABASE_USERNAME }},DATABASE.PASSWORD=${{ secrets.DATABASE_PASSWORD }},DATABASE.NAME=${{ vars.DATABASE_NAME }}'
 
     # Replace additional values in config file
     - name: Replace account server values in config file
