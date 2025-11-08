@@ -108,15 +108,14 @@ jobs:
             DATABASE.NAME=${{ env.DATABASE_NAME }}
 
     # Replace additional values in config file
-    - name: Replace additional values in config file
-      if: "${{ inputs.config_settings != '' }}"
+    - name: Replace account server values in config file
+      if: contains(inputs.config_settings, 'accountserver')  
       uses: datamonsters/replace-action@v1
       with:
         files: ${{ inputs.project_path }}/Config/appsettings.Production.json
-        replacements: ${{ inputs.config_settings }}
-        # replacements: | 
-        #     ACCOUNTSERVER.URL=${{ secrets.ACCOUNTSERVER_URL }},
-        #     ACCOUNTSERVER.CLIENTSECRET=${{ secrets.ACCOUNTSERVER_CLIENTSECRET }}
+        replacements: | 
+            ACCOUNTSERVER.URL=${{ secrets.ACCOUNTSERVER_URL }},
+            ACCOUNTSERVER.CLIENTSECRET=${{ secrets.ACCOUNTSERVER_CLIENTSECRET }}
 
     # Build the image
     - name: Build Docker image
