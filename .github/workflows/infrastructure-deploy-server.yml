@@ -143,7 +143,9 @@ jobs:
 
     - name: Run Docker container
       run:
-        docker run -p ${{ vars.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} 
+        docker run 
+        --detach 
+        --publish ${{ vars.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} 
         --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-image:${{ env.TIMESTAMP }}
         --restart unless-stopped
-        --detach 
+        
