@@ -1,17 +1,12 @@
 #
 # Build Deploy file for Docker container
-# Change the variables in this section to match your project
 #
 
-name: Partial Deploy Step
+name: Generic Database Deploy Step
 
 defaults:
   run:
     working-directory: .
-
-#
-# Everything below this is template code
-#
 
 on:
   workflow_call:
