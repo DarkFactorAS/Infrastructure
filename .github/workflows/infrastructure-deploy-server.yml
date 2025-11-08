@@ -51,6 +51,10 @@ jobs:
       NUGET_USERNAME: ${{ secrets.NUGET_USERNAME }}
       NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
 
+      # Config name
+      CONFIG_NAME: ${{ inputs.project_path }}/Config/appsettings.Production.json
+
+      
     # To be able to deploy on the local server
     runs-on: self-hosted
 
@@ -78,7 +82,7 @@ jobs:
     - name: Create config file
       uses: bluwy/substitute-string-action@v3
       with:
-        _input-file: ${{ inputs.project_path }}/Config/appsettings.${{ inputs.environment }}.json
+        _input-file: ${{ env.CONFIG_NAME }}
         DATABASE.SERVER: ${{ env.DATABASE_SERVER }}
         DATABASE.PORT: ${{ env.DATABASE_PORT }}
         DATABASE.USERNAME: ${{ env.DATABASE_USERNAME }}
@@ -89,7 +93,7 @@ jobs:
         ACCOUNTSERVER.URL: ${{ secrets.ACCOUNTSERVER_URL }}
         ACCOUNTSERVER.CLIENTSECRET: ${{ secrets.ACCOUNTSERVER_CLIENTSECRET }}
 
-        _output-file: ${{ inputs.project_path }}/Config/appsettings.${{ inputs.environment }}.json
+        _output-file: ${{ env.CONFIG_NAME }}
 
     # Build the image
     - name: Build Docker image
