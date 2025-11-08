@@ -113,9 +113,7 @@ jobs:
       uses: datamonsters/replace-action@v1
       with:
         files: ${{ inputs.project_path }}/Config/appsettings.Production.json
-        replacements: | 
-            ACCOUNTSERVER.URL=${{ secrets.ACCOUNTSERVER_URL }},
-            ACCOUNTSERVER.CLIENTSECRET=${{ secrets.ACCOUNTSERVER_CLIENTSECRET }}
+        replacements: 'ACCOUNTSERVER.URL=${{ secrets.ACCOUNTSERVER_URL }},ACCOUNTSERVER.CLIENTSECRET=${{ secrets.ACCOUNTSERVER_CLIENTSECRET }}'
 
     # Build the image
     - name: Build Docker image
