@@ -2,6 +2,24 @@
 # Build Deploy file for Docker container
 #
 
+#
+# Common variables and secrets
+#   Environment
+#     secrets.DATABASE_PASSWORD
+#     vars.DATABASE_NAME
+#     vars.DATABASE_PORT
+#     vars.EXTERNAL_PORT
+#   Repository:
+#     secrets.DATABASE_USERNAME
+#   Organization:
+#     vars.DATABASE_SERVER
+#
+
+# Account variables and secrets (optional, only if using account server)
+#   Environment
+#     secrets.ACCOUNTSERVER_URL
+#     secrets.ACCOUNTSERVER_CLIENTSECRET
+
 name: General - Deploy Server Docker Container
 
 permissions:
@@ -38,21 +56,7 @@ jobs:
     # Static variables used in the workflow
     env:
       TIMESTAMP: ${{ github.sha }}
-      #CONFIGURATION: Release
       INTERNAL_PORT: 8080
-
-      # Environment Secrets:
-      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-      # Environment Variables:
-      DATABASE_NAME: ${{ vars.DATABASE_NAME }}
-      DATABASE_PORT: ${{ vars.DATABASE_PORT }}
-      EXTERNAL_PORT: ${{ vars.EXTERNAL_PORT }}
-      # Repository Variables:
-      DATABASE_USERNAME: ${{ vars.DATABASE_USERNAME }}
-      #BUGREPORT_SERVER_URL: ${{ vars.BUGREPORT_SERVER_URL }}${{ inputs.server_external_port && inputs.server_external_port != 0 && format(':{0}', inputs.server_external_port) || '' }}
- 
-      # Organization Secrets:
-      # vars.DATABASE_SERVER
       NUGET_USERNAME: ${{ secrets.NUGET_USERNAME }}
       NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
      
@@ -63,17 +67,24 @@ jobs:
 
     steps:
 
-    - name: Verify secrets
+    #
+    # Verify required secrets and variables are set
+    #
+    - name: Verify secrets and variables are set
       run: |
-        if [ -z "${{ env.NUGET_USERNAME }}" ] || [ -z "${{ env.NUGET_TOKEN }}" ] || [ -z "${{ vars.DATABASE_SERVER }}" ] || [ -z "${{ env.DATABASE_PASSWORD }}" ]; then
+        if [ -z "${{ env.NUGET_USERNAME }}" ] || [ -z "${{ env.NUGET_TOKEN }}" ]; then
           echo "One or more required secrets are not set. Please check the organization and environment secrets."
+          exit 1
+        fi
+        if [ -z "${{ vars.DATABASE_SERVER }}" ] || [ -z "${{ secrets.DATABASE_USERNAME }}" ] || [ -z "${{ secrets.DATABASE_PASSWORD }}" ]; then
+          echo "Database settings are not set. Please check the secrets."
           exit 1
         fi
         if [ -z "${{ vars.EXTERNAL_PORT }}" ] || [ "${{ vars.EXTERNAL_PORT }}" == "0" ]; then
           echo "External port is not set or is set to 0. Please check the environment variables."
           exit 1
         fi
-
+        
     - name: Convert project name to lowercase for Docker name
       id: convert_to_lowercase
       run: |
@@ -99,7 +110,7 @@ jobs:
     #     INPUT_ACCOUNTSERVER.CLIENTSECRET: ${{ secrets.ACCOUNTSERVER_CLIENTSECRET }}
 
     # Replace basic values
-    - name: Replace basic values in Dockerfile
+    - name: Replace basic values in config file
       uses: datamonsters/replace-action@v1
       with:
         files: ${{ inputs.project_path }}/Config/appsettings.Production.json
