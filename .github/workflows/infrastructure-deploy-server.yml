@@ -57,8 +57,8 @@ jobs:
     env:
       TIMESTAMP: ${{ github.sha }}
       INTERNAL_PORT: 8080
-      NUGET_USERNAME: ${{ secrets.NUGET_USERNAME }}
-      NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
+#      NUGET_USERNAME: ${{ secrets.NUGET_USERNAME }}
+#      NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
      
     # To be able to deploy on the local server
     runs-on: self-hosted
@@ -72,11 +72,11 @@ jobs:
     #
     - name: Verify secrets and variables are set
       run: |
-        if [ -z "${{ env.NUGET_USERNAME }}" ] || [ -z "${{ env.NUGET_TOKEN }}" ]; then
+        if [ -z "${{ secrets.NUGET_USERNAME }}" ] || [ -z "${{ secrets.NUGET_TOKEN }}" ]; then
           echo "One or more required secrets are not set. Please check the organization and environment secrets."
           exit 1
         fi
-        if [ -z "${{ vars.DATABASE_SERVER }}" ] || [ -z "${{ secrets.DATABASE_USERNAME }}" ] || [ -z "${{ secrets.DATABASE_PASSWORD }}" ]; then
+        if [ -z "${{ vars.DATABASE_SERVER }}" ] || [ -z "${{ vars.DATABASE_PORT }}" ] || [ -z "${{ secrets.DATABASE_USERNAME }}" ] || [ -z "${{ secrets.DATABASE_PASSWORD }}" ]; then
           echo "Database settings are not set. Please check the secrets."
           exit 1
         fi
@@ -126,7 +126,7 @@ jobs:
 
     # Build the image
     - name: Build Docker image
-      run: docker build . --file ${{ inputs.project_path }}/Dockerfile --tag ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-image:${{ env.TIMESTAMP }}  --build-arg username=${{ env.NUGET_USERNAME }} --build-arg token=${{ env.NUGET_TOKEN }}
+      run: docker build . --file ${{ inputs.project_path }}/Dockerfile --tag ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-image:${{ env.TIMESTAMP }}  --build-arg username=${{ secrets.NUGET_USERNAME }} --build-arg token=${{ secrets.NUGET_TOKEN }}
 
     - name: Stop old Docker container
       run:
@@ -138,5 +138,5 @@ jobs:
 
     - name: Run Docker container
       run:
-        docker run -d -p ${{ env.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-image:${{ env.TIMESTAMP }}
+        docker run -d -p ${{ vars.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-image:${{ env.TIMESTAMP }}
 
