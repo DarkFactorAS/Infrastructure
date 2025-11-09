@@ -42,6 +42,10 @@ on:
       project_name:
         required: true
         type: string
+      dockerfile:
+        required: false
+        default: "Dockerfile"
+        type: string
       config_settings:
         required: false
         default: ""
@@ -128,7 +132,7 @@ jobs:
     - name: Build Docker image
       run:
         docker build . 
-        --file ${{ inputs.project_path }}/Dockerfile 
+        --file ${{ inputs.project_path }}/${{ inputs.dockerfile }} 
         --tag ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-image:${{ env.TIMESTAMP }}  
         --build-arg username=${{ secrets.NUGET_USERNAME }} 
         --build-arg token=${{ secrets.NUGET_TOKEN }}
