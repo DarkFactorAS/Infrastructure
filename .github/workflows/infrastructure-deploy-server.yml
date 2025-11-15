@@ -1,0 +1,163 @@
+#
+# Build Deploy file for Docker container
+#
+
+#
+# Common variables and secrets
+#   Environment
+#     secrets.DATABASE_PASSWORD
+#     vars.DATABASE_NAME
+#     vars.DATABASE_PORT
+#     vars.EXTERNAL_PORT
+#   Repository:
+#     secrets.DATABASE_USERNAME
+#   Organization:
+#     vars.DATABASE_SERVER
+#
+
+# Account variables and secrets (optional, only if using account server)
+#   Environment
+#     secrets.ACCOUNTSERVER_URL
+#     secrets.ACCOUNTSERVER_CLIENTSECRET
+
+name: General - Deploy Server Docker Container
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: .
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      project_path:
+        required: false
+        default: "."
+        type: string
+      project_name:
+        required: true
+        type: string
+      dockerfile:
+        required: false
+        default: "Dockerfile"
+        type: string
+      config_settings:
+        required: false
+        default: ""
+        type: string
+
+jobs:
+  deploy:
+
+    # Timeout for the job
+    timeout-minutes: 15
+
+    # Static variables used in the workflow
+    env:
+      TIMESTAMP: ${{ github.sha }}
+      INTERNAL_PORT: 8080
+#      NUGET_USERNAME: ${{ secrets.NUGET_USERNAME }}
+#      NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
+     
+    # To be able to deploy on the local server
+    runs-on: self-hosted
+
+    environment: ${{ inputs.environment }}
+
+    steps:
+
+    #
+    # Verify required secrets and variables are set
+    #
+    - name: Verify secrets and variables are set
+      run: |
+        if [ -z "${{ secrets.NUGET_USERNAME }}" ] || [ -z "${{ secrets.NUGET_TOKEN }}" ]; then
+          echo "One or more required secrets are not set. Please check the organization and environment secrets."
+          exit 1
+        fi
+        if [ -z "${{ vars.DATABASE_SERVER }}" ] || [ -z "${{ vars.DATABASE_PORT }}" ] || [ -z "${{ secrets.DATABASE_USERNAME }}" ] || [ -z "${{ secrets.DATABASE_PASSWORD }}" ]; then
+          echo "Database settings are not set. Please check the secrets."
+          exit 1
+        fi
+        if [ -z "${{ vars.EXTERNAL_PORT }}" ] || [ "${{ vars.EXTERNAL_PORT }}" == "0" ]; then
+          echo "External port is not set or is set to 0. Please check the environment variables."
+          exit 1
+        fi
+        
+    - name: Convert project name to lowercase for Docker name
+      id: convert_to_lowercase
+      run: |
+        UPPERCASE_VAR="${{ inputs.project_name }}"
+        DOCKER_NAME="${UPPERCASE_VAR,,}" # The ,, converts to lowercase
+        echo "DOCKER_NAME=$DOCKER_NAME" >> $GITHUB_OUTPUT
+
+    - name: Checkout repository
+      uses: actions/checkout@v4      
+
+    # - name: Create config file
+    #   uses: bluwy/substitute-string-action@v3
+    #   with:
+    #     _input-file: ${{ inputs.project_path }}/Config/appsettings.Production.json
+    #     _output-file: ${{ inputs.project_path }}/Config/appsettings.Production.json
+    #     INPUT_DATABASE.SERVER: ${{ vars.DATABASE_SERVER }}
+    #     INPUT_DATABASE.PORT: ${{ vars.DATABASE_PORT }}
+    #     INPUT_DATABASE.USERNAME: ${{ secrets.DATABASE_USERNAME }}
+    #     INPUT_DATABASE.PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+    #     INPUT_DATABASE.NAME: ${{ vars.DATABASE_NAME }}
+
+    #     INPUT_ACCOUNTSERVER.URL: ${{ secrets.ACCOUNTSERVER_URL }}
+    #     INPUT_ACCOUNTSERVER.CLIENTSECRET: ${{ secrets.ACCOUNTSERVER_CLIENTSECRET }}
+
+    # Replace basic values
+    - name: Replace basic values in config file
+      uses: datamonsters/replace-action@v1
+      with:
+        files: ${{ inputs.project_path }}/Config/appsettings.Production.json
+        replacements: 'DATABASE.SERVER=${{ vars.DATABASE_SERVER }},DATABASE.PORT=${{ vars.DATABASE_PORT }},DATABASE.USERNAME=${{ secrets.DATABASE_USERNAME }},DATABASE.PASSWORD=${{ secrets.DATABASE_PASSWORD }},DATABASE.NAME=${{ vars.DATABASE_NAME }}'
+
+    # Replace additional values in config file
+    - name: Replace account server values in config file
+      if: contains(inputs.config_settings, 'accountserver')  
+      uses: datamonsters/replace-action@v1
+      with:
+        files: ${{ inputs.project_path }}/Config/appsettings.Production.json
+        replacements: 'ACCOUNTSERVER.URL=${{ secrets.ACCOUNTSERVER_URL }},ACCOUNTSERVER.CLIENTSECRET=${{ secrets.ACCOUNTSERVER_CLIENTSECRET }}'
+
+    # Build the image using BuildKit secrets for better security
+    # Note: Dockerfiles must use secret mounts instead of build args:
+    #   RUN --mount=type=secret,id=nuget_username \
+    #       --mount=type=secret,id=nuget_token \
+    #       NUGET_USERNAME=$(cat /run/secrets/nuget_username) \
+    #       NUGET_TOKEN=$(cat /run/secrets/nuget_token) \
+    #       dotnet restore --source "https://nuget.pkg.github.com/YOUR_ORG/index.json"
+    - name: Build Docker image
+      env:
+        DOCKER_BUILDKIT: 1
+        NUGET_USERNAME: ${{ secrets.NUGET_USERNAME }}
+        NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
+      run: |
+        docker build . \
+          --file ${{ inputs.project_path }}/${{ inputs.dockerfile }} \
+          --tag ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-image:${{ env.TIMESTAMP }} \
+          --secret id=nuget_username,env=NUGET_USERNAME \
+          --secret id=nuget_token,env=NUGET_TOKEN
+
+    - name: Stop old Docker container
+      run: docker stop ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} || true
+
+    - name: Delete old Docker container
+      run: docker rm ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} || true
+
+    - name: Run Docker container
+      run: |
+        docker run \
+          --detach \
+          --publish ${{ vars.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} \
+          --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} \
+          --restart unless-stopped \
+          ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-image:${{ env.TIMESTAMP }}
