@@ -146,10 +146,10 @@ jobs:
         docker rm ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} || true
 
     - name: Run Docker container
-      run:
-        docker run 
-        --detach 
-        --publish ${{ vars.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} 
-        --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-image:${{ env.TIMESTAMP }}
-        --restart unless-stopped
-        
+      run: |
+        docker run \
+          --detach \
+          --publish ${{ vars.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} \
+          --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} \
+          --restart unless-stopped \
+          ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-image:${{ env.TIMESTAMP }}
