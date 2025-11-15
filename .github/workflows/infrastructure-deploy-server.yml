@@ -142,8 +142,7 @@ jobs:
         docker stop ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} || true
 
     - name: Delete old Docker container
-      run:
-        docker rm ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} || true
+      run: docker rm ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} || true
 
     - name: Run Docker container
       run: |
