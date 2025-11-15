@@ -61,6 +61,8 @@ jobs:
     env:
       TIMESTAMP: ${{ github.sha }}
       INTERNAL_PORT: 8080
+#      NUGET_USERNAME: ${{ secrets.NUGET_USERNAME }}
+#      NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
      
     # To be able to deploy on the local server
     runs-on: self-hosted
@@ -126,15 +128,6 @@ jobs:
         files: ${{ inputs.project_path }}/Config/appsettings.Production.json
         replacements: 'ACCOUNTSERVER.URL=${{ secrets.ACCOUNTSERVER_URL }},ACCOUNTSERVER.CLIENTSECRET=${{ secrets.ACCOUNTSERVER_CLIENTSECRET }}'
 
-
-    # Create Docker secret
-    - name: Create Docker secret for NuGet
-      env:
-        DOCKER_BUILDKIT: 1
-      run: |
-        printf ${{ secrets.NUGET_USERNAME }} | docker secret create nuget_username - || true
-        printf ${{ secrets.NUGET_TOKEN }} | docker secret create nuget_token - || true
-
     # Build the image using BuildKit secrets for better security
     # Note: Dockerfiles must use secret mounts instead of build args:
     #   RUN --mount=type=secret,id=nuget_username \
@@ -145,12 +138,14 @@ jobs:
     - name: Build Docker image
       env:
         DOCKER_BUILDKIT: 1
+        NUGET_USERNAME: ${{ secrets.NUGET_USERNAME }}
+        NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
       run: |
         docker build . \
           --file ${{ inputs.project_path }}/${{ inputs.dockerfile }} \
           --tag ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-image:${{ env.TIMESTAMP }} \
-          --secret id=nuget_username \
-          --secret id=nuget_token
+          --secret id=nuget_username,env=NUGET_USERNAME \
+          --secret id=nuget_token,env=NUGET_TOKEN
 
     - name: Stop old Docker container
       run: docker stop ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} || true
