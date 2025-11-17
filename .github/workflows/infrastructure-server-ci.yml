@@ -84,7 +84,7 @@ jobs:
       run: |
         docker build . \
           --file ${{ inputs.project_path }}/${{ inputs.dockerfile }} \
-          --tag ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-CI-image:${{ env.TIMESTAMP }} \
+          --tag ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-ci-image:${{ env.TIMESTAMP }} \
           --secret id=nuget_username,env=NUGET_USERNAME \
           --secret id=nuget_token,env=NUGET_TOKEN
 
