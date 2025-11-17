@@ -44,7 +44,7 @@ jobs:
       TIMESTAMP: ${{ github.sha }}
       INTERNAL_PORT: 8080
      
-    # To be able to deploy on the local server
+    # To build on the local server
     runs-on: self-hosted
 
     steps:
