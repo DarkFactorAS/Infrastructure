@@ -42,7 +42,6 @@ jobs:
     # Static variables used in the workflow
     env:
       TIMESTAMP: ${{ github.sha }}
-      INTERNAL_PORT: 8080
      
     # To build on the local server
     runs-on: self-hosted
