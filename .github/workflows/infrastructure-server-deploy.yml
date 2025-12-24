@@ -128,6 +128,14 @@ jobs:
         files: ${{ inputs.project_path }}/Config/appsettings.Production.json
         replacements: 'ACCOUNTSERVER.URL=${{ secrets.ACCOUNTSERVER_URL }},ACCOUNTSERVER.CLIENTSECRET=${{ secrets.ACCOUNTSERVER_CLIENTSECRET }}'
 
+    # Replace additional values in config file
+    - name: Replace account server values in config file
+      if: contains(inputs.config_settings, 'bugreportweb')  
+      uses: datamonsters/replace-action@v1
+      with:
+        files: ${{ inputs.project_path }}/Config/appsettings.Production.json
+        replacements: 'BUGREPORTSERVER.URL=${{ vars.BUGREPORT_SERVER_URL }}'
+
     # Build the image using BuildKit secrets for better security
     # Note: Dockerfiles must use secret mounts instead of build args:
     #   RUN --mount=type=secret,id=nuget_username \
