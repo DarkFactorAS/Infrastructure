@@ -80,12 +80,16 @@ jobs:
           echo "One or more required secrets are not set. Please check the organization and environment secrets."
           exit 1
         fi
-        if [ -z "${{ vars.DATABASE_SERVER }}" ] || [ -z "${{ vars.DATABASE_PORT }}" ] || [ -z "${{ secrets.DATABASE_USERNAME }}" ] || [ -z "${{ secrets.DATABASE_PASSWORD }}" ]; then
-          echo "Database settings are not set. Please check the secrets."
-          exit 1
-        fi
         if [ -z "${{ vars.EXTERNAL_PORT }}" ] || [ "${{ vars.EXTERNAL_PORT }}" == "0" ]; then
           echo "External port is not set or is set to 0. Please check the environment variables."
+          exit 1
+        fi
+
+    - name: Verify DB secrets
+      if: ${{ !contains(inputs.config_settings, 'skipdbcheck') }}  
+      run: |
+        if [ -z "${{ vars.DATABASE_SERVER }}" ] || [ -z "${{ vars.DATABASE_PORT }}" ] || [ -z "${{ secrets.DATABASE_USERNAME }}" ] || [ -z "${{ secrets.DATABASE_PASSWORD }}" ]; then
+          echo "Database settings are not set. Please check the secrets."
           exit 1
         fi
         
