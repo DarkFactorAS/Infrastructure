@@ -80,12 +80,16 @@ jobs:
           echo "One or more required secrets are not set. Please check the organization and environment secrets."
           exit 1
         fi
-        if [ -z "${{ vars.DATABASE_SERVER }}" ] || [ -z "${{ vars.DATABASE_PORT }}" ] || [ -z "${{ secrets.DATABASE_USERNAME }}" ] || [ -z "${{ secrets.DATABASE_PASSWORD }}" ]; then
-          echo "Database settings are not set. Please check the secrets."
-          exit 1
-        fi
         if [ -z "${{ vars.EXTERNAL_PORT }}" ] || [ "${{ vars.EXTERNAL_PORT }}" == "0" ]; then
           echo "External port is not set or is set to 0. Please check the environment variables."
+          exit 1
+        fi
+
+    - name: Verify DB secrets
+      if: ${{ !contains(inputs.config_settings, 'skipdbcheck') }}  
+      run: |
+        if [ -z "${{ vars.DATABASE_SERVER }}" ] || [ -z "${{ vars.DATABASE_PORT }}" ] || [ -z "${{ secrets.DATABASE_USERNAME }}" ] || [ -z "${{ secrets.DATABASE_PASSWORD }}" ]; then
+          echo "Database settings are not set. Please check the secrets."
           exit 1
         fi
         
@@ -115,7 +119,7 @@ jobs:
 
     # Replace basic values
     - name: Replace basic values in config file
-      uses: datamonsters/replace-action@v1
+      uses: datamonsters/replace-action@0f3e9781272167711334f3af148a5b90c47e9370 # v1
       with:
         files: ${{ inputs.project_path }}/Config/appsettings.Production.json
         replacements: 'DATABASE.SERVER=${{ vars.DATABASE_SERVER }},DATABASE.PORT=${{ vars.DATABASE_PORT }},DATABASE.USERNAME=${{ secrets.DATABASE_USERNAME }},DATABASE.PASSWORD=${{ secrets.DATABASE_PASSWORD }},DATABASE.NAME=${{ vars.DATABASE_NAME }}'
@@ -123,10 +127,18 @@ jobs:
     # Replace additional values in config file
     - name: Replace account server values in config file
       if: contains(inputs.config_settings, 'accountserver')  
-      uses: datamonsters/replace-action@v1
+      uses: datamonsters/replace-action@0f3e9781272167711334f3af148a5b90c47e9370 # v1
       with:
         files: ${{ inputs.project_path }}/Config/appsettings.Production.json
         replacements: 'ACCOUNTSERVER.URL=${{ secrets.ACCOUNTSERVER_URL }},ACCOUNTSERVER.CLIENTSECRET=${{ secrets.ACCOUNTSERVER_CLIENTSECRET }}'
+
+    # Replace additional values in config file
+    - name: Replace account server values in config file
+      if: contains(inputs.config_settings, 'bugreportweb')  
+      uses: datamonsters/replace-action@0f3e9781272167711334f3af148a5b90c47e9370 # v1
+      with:
+        files: ${{ inputs.project_path }}/Config/appsettings.Production.json
+        replacements: 'BUGREPORTSERVER.URL=${{ vars.BUGREPORT_SERVER_URL }}'
 
     # Build the image using BuildKit secrets for better security
     # Note: Dockerfiles must use secret mounts instead of build args:
