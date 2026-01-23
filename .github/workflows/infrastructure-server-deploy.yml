@@ -50,6 +50,9 @@ on:
         required: false
         default: ""
         type: string
+      versionfile:
+        required: false
+        type: string
 
 jobs:
   deploy:
@@ -139,6 +142,29 @@ jobs:
       with:
         files: ${{ inputs.project_path }}/Config/appsettings.Production.json
         replacements: 'BUGREPORTSERVER.URL=${{ vars.BUGREPORT_SERVER_URL }}'
+
+    # Get the version from the program file
+    # We want the format to be 
+    # Major version from the file + date + short sha
+    - name: Get version from GitHub context
+      if: inputs.versionfile != ''
+      id: get-version
+      run: |
+        CURRENT_VERSION=$(grep -o 'Version = "[^"]*"' ${{ inputs.project_path }}/${{ inputs.versionfile }} | cut -d'"' -f2)
+        IFS='.' read -ra ADDR <<< "$CURRENT_VERSION"
+        MAJOR=${ADDR[0]}
+        DATE="$(date +%y%m%d)"
+        FULL_SHA=${{ github.sha }}
+        SHORT_SHA=$(echo "${FULL_SHA}" | cut -c1-6)
+        VERSION="$MAJOR.$DATE.$SHORT_SHA"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Determined version: $VERSION"
+
+    # Update the version in the program file
+    - name: Update version in Program.cs
+      if: inputs.versionfile != ''
+      run: |
+        sed -i 's/public static string Version = "[^"]*";/public static string Version = "${{ steps.get-version.outputs.version }}";/' ${{ inputs.project_path }}/${{ inputs.versionfile }}
 
     # Build the image using BuildKit secrets for better security
     # Note: Dockerfiles must use secret mounts instead of build args:
