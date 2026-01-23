@@ -147,7 +147,7 @@ jobs:
     # Get the version from the program file
     # We want the format to be 
     # Major version from the file + short sha + date
-    - name: Get version from GitHub context
+    - name: Get version from Program.cs (if specified)
       if: inputs.versionfile != ''
       id: get-version
       run: |
