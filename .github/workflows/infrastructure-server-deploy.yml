@@ -52,6 +52,7 @@ on:
         type: string
       versionfile:
         required: false
+        default: ""
         type: string
 
 jobs:
