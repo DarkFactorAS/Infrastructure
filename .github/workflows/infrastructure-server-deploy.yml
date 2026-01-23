@@ -119,7 +119,7 @@ jobs:
 
     # Replace basic values
     - name: Replace basic values in config file
-      uses: datamonsters/replace-action@v1
+      uses: datamonsters/replace-action@0f3e9781272167711334f3af148a5b90c47e9370 # v1
       with:
         files: ${{ inputs.project_path }}/Config/appsettings.Production.json
         replacements: 'DATABASE.SERVER=${{ vars.DATABASE_SERVER }},DATABASE.PORT=${{ vars.DATABASE_PORT }},DATABASE.USERNAME=${{ secrets.DATABASE_USERNAME }},DATABASE.PASSWORD=${{ secrets.DATABASE_PASSWORD }},DATABASE.NAME=${{ vars.DATABASE_NAME }}'
@@ -127,7 +127,7 @@ jobs:
     # Replace additional values in config file
     - name: Replace account server values in config file
       if: contains(inputs.config_settings, 'accountserver')  
-      uses: datamonsters/replace-action@v1
+      uses: datamonsters/replace-action@0f3e9781272167711334f3af148a5b90c47e9370 # v1
       with:
         files: ${{ inputs.project_path }}/Config/appsettings.Production.json
         replacements: 'ACCOUNTSERVER.URL=${{ secrets.ACCOUNTSERVER_URL }},ACCOUNTSERVER.CLIENTSECRET=${{ secrets.ACCOUNTSERVER_CLIENTSECRET }}'
@@ -135,7 +135,7 @@ jobs:
     # Replace additional values in config file
     - name: Replace account server values in config file
       if: contains(inputs.config_settings, 'bugreportweb')  
-      uses: datamonsters/replace-action@v1
+      uses: datamonsters/replace-action@0f3e9781272167711334f3af148a5b90c47e9370 # v1
       with:
         files: ${{ inputs.project_path }}/Config/appsettings.Production.json
         replacements: 'BUGREPORTSERVER.URL=${{ vars.BUGREPORT_SERVER_URL }}'
