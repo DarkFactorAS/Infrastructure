@@ -162,7 +162,7 @@ jobs:
         echo "Determined version: $VERSION"
 
     # Update the version in the program file
-    - name: Update version in Program.cs
+    - name: Update version in version file
       if: inputs.versionfile != ''
       run: |
         sed -i 's/public static string Version = "[^"]*";/public static string Version = "${{ steps.get-version.outputs.version }}";/' ${{ inputs.project_path }}/${{ inputs.versionfile }}
