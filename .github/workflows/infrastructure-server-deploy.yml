@@ -151,7 +151,7 @@ jobs:
       if: inputs.versionfile != ''
       id: get-version
       run: |
-        CURRENT_VERSION=$(grep -o 'Version = "[^"]*"' ${{ inputs.project_path }}/${{ inputs.versionfile }} | cut -d'"' -f2)
+        CURRENT_VERSION=$(grep -o 'Version = "[^"]*"' "${{ inputs.project_path }}/${{ inputs.versionfile }}" | cut -d'"' -f2)
         IFS='.' read -ra ADDR <<< "$CURRENT_VERSION"
         MAJOR=${ADDR[0]}
         DATE="$(date +%y%m%d)"
@@ -165,7 +165,7 @@ jobs:
     - name: Update version in version file
       if: inputs.versionfile != ''
       run: |
-        sed -i 's/public static string Version = "[^"]*";/public static string Version = "${{ steps.get-version.outputs.version }}";/' ${{ inputs.project_path }}/${{ inputs.versionfile }}
+        sed -i 's/public static string Version = "[^"]*";/public static string Version = "${{ steps.get-version.outputs.version }}";/' "${{ inputs.project_path }}/${{ inputs.versionfile }}"
 
     # Build the image using BuildKit secrets for better security
     # Note: Dockerfiles must use secret mounts instead of build args:
