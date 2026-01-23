@@ -146,7 +146,7 @@ jobs:
 
     # Get the version from the program file
     # We want the format to be 
-    # Major version from the file + date + short sha
+    # Major version from the file + short sha + date
     - name: Get version from GitHub context
       if: inputs.versionfile != ''
       id: get-version
