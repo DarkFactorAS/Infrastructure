@@ -32,6 +32,11 @@ on:
         required: false
         default: "Dockerfile"
         type: string
+      agenttype:
+        type: string
+        description: "The host type for the build. This is used to determine the platform for the Docker build."
+        required: false
+        default: "self-hosted"
 
 jobs:
   build:
@@ -44,7 +49,7 @@ jobs:
       TIMESTAMP: ${{ github.sha }}
      
     # To build on the local server
-    runs-on: self-hosted
+    runs-on: ${{ inputs.agenttype }}
 
     steps:
 
