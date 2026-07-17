@@ -32,9 +32,9 @@ on:
         required: false
         default: "Dockerfile"
         type: string
-      agenttype:
+      runner_label:
         type: string
-        description: "The host type for the build. This is used to determine the platform for the Docker build."
+        description: "The GitHub Actions runner label used for runs-on."
         required: false
         default: "self-hosted"
 
@@ -49,7 +49,7 @@ jobs:
       TIMESTAMP: ${{ github.sha }}
      
     # To build on the local server
-    runs-on: ${{ inputs.agenttype }}
+    runs-on: ${{ inputs.runner_label }}
 
     steps:
 
@@ -91,4 +91,3 @@ jobs:
           --tag ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-ci-image:${{ env.TIMESTAMP }} \
           --secret id=nuget_username,env=NUGET_USERNAME \
           --secret id=nuget_token,env=NUGET_TOKEN
-
