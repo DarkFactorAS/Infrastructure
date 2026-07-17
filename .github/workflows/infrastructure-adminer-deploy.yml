@@ -1,0 +1,62 @@
+#
+# Build Deploy file for Database Adminer Docker container
+#
+
+name: Database Adminer Deploy Step
+    
+defaults:
+  run:
+    working-directory: .
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      project_name:
+        required: false
+        default: "adminer"
+        type: string
+
+jobs:
+  deploy:
+
+    # Timeout for the job
+    timeout-minutes: 15
+
+    # Static variables used in the workflow
+    env:
+      TIMESTAMP: ${{ github.sha }}
+      INTERNAL_PORT: 8080
+      EXTERNAL_PORT: ${{ vars.ADMINER_PORT }}
+
+    # To be able to deploy on the local server
+    runs-on: self-hosted
+
+    environment: ${{ inputs.environment }}
+
+    steps:
+
+    - name: Convert Docker name to lowercase
+      id: convert_to_lowercase
+      run: |
+        UPPERCASE_VAR="${{ inputs.project_name }}"
+        DOCKER_NAME="${UPPERCASE_VAR,,}" # The ,, converts to lowercase
+        echo "DOCKER_NAME=$DOCKER_NAME" >> $GITHUB_OUTPUT
+
+    - name: Stop old Docker container
+      run:
+        docker stop ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} || true
+
+    - name: Delete old Docker container
+      run:
+        docker rm ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} || true
+
+    - name: Run Docker container
+      run:
+        docker run -p ${{ env.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} 
+        --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} 
+        --restart unless-stopped
+        --detach 
+        adminer:latest
