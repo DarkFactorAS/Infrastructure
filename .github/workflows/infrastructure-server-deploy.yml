@@ -91,10 +91,6 @@ jobs:
           echo "One or more required secrets are not set. Please check the organization and environment secrets."
           exit 1
         fi
-        if [ -z "${{ vars.EXTERNAL_PORT }}" ] || [ "${{ vars.EXTERNAL_PORT }}" == "0" ]; then
-          echo "External port is not set or is set to 0. Please check the environment variables."
-          exit 1
-        fi
 
     - name: Verify DB secrets
       if: ${{ !contains(inputs.config_settings, 'skipdbcheck') }}  
