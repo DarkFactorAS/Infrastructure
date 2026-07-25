@@ -199,6 +199,7 @@ jobs:
     - name: Run Docker container
       run: |
         docker run \
+          -e ASPNETCORE_ENVIRONMENT=${{ env.ASPNETCORE_ENVIRONMENT }} \
           --detach \
           --publish ${{ env.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} \
           --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }} \
