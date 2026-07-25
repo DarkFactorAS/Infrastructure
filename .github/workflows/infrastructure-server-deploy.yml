@@ -129,7 +129,7 @@ jobs:
     - name: Replace basic values in config file
       uses: datamonsters/replace-action@0f3e9781272167711334f3af148a5b90c47e9370 # v1
       with:
-        files: ${{ inputs.project_path }}${{ inputs.config_path }}/Config/appsettings.Production.json
+        files: ${{ inputs.project_path }}${{ inputs.config_path }}/Config/appsettings.${{ inputs.environment }}.json
         replacements: 'DATABASE.SERVER=${{ vars.DATABASE_SERVER }},DATABASE.PORT=${{ vars.DATABASE_PORT }},DATABASE.USERNAME=${{ secrets.DATABASE_USERNAME }},DATABASE.PASSWORD=${{ secrets.DATABASE_PASSWORD }},DATABASE.NAME=${{ vars.DATABASE_NAME }}'
 
     # Replace additional values in config file
@@ -137,7 +137,7 @@ jobs:
       if: contains(inputs.config_settings, 'accountserver')  
       uses: datamonsters/replace-action@0f3e9781272167711334f3af148a5b90c47e9370 # v1
       with:
-        files: ${{ inputs.project_path }}${{ inputs.config_path }}/Config/appsettings.Production.json
+        files: ${{ inputs.project_path }}${{ inputs.config_path }}/Config/appsettings.${{ inputs.environment }}.json
         replacements: 'ACCOUNTSERVER.URL=${{ secrets.ACCOUNTSERVER_URL }},ACCOUNTSERVER.CLIENTSECRET=${{ secrets.ACCOUNTSERVER_CLIENTSECRET }}'
 
     # Replace additional values in config file
@@ -145,7 +145,7 @@ jobs:
       if: contains(inputs.config_settings, 'bugreportweb')  
       uses: datamonsters/replace-action@0f3e9781272167711334f3af148a5b90c47e9370 # v1
       with:
-        files: ${{ inputs.project_path }}${{ inputs.config_path }}/Config/appsettings.Production.json
+        files: ${{ inputs.project_path }}${{ inputs.config_path }}/Config/appsettings.${{ inputs.environment }}.json
         replacements: 'BUGREPORTSERVER.URL=${{ vars.BUGREPORT_SERVER_URL }}'
 
     # Get the version from the program file
