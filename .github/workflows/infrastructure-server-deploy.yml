@@ -104,7 +104,7 @@ jobs:
     - name: Convert project name to lowercase for Docker name
       id: convert_to_lowercase
       run: |
-        UPPERCASE_VAR="${{ inputs.project_name }}"
+        UPPERCASE_VAR="${{ inputs.project_name }}"-${{ inputs.environment }}
         DOCKER_NAME="${UPPERCASE_VAR,,}" # The ,, converts to lowercase
         echo "DOCKER_NAME=$DOCKER_NAME" >> $GITHUB_OUTPUT
 
@@ -186,21 +186,21 @@ jobs:
       run: |
         docker build . \
           --file ${{ inputs.project_path }}/${{ inputs.dockerfile }} \
-          --tag ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-image:${{ env.TIMESTAMP }} \
+          --tag ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-image:${{ env.TIMESTAMP }} \
           --secret id=nuget_username,env=NUGET_USERNAME \
           --secret id=nuget_token,env=NUGET_TOKEN
 
     - name: Stop old Docker container
-      run: docker stop ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} || true
+      run: docker stop ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }} || true
 
     - name: Delete old Docker container
-      run: docker rm ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} || true
+      run: docker rm ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }} || true
 
     - name: Run Docker container
       run: |
         docker run \
           --detach \
           --publish ${{ env.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} \
-          --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} \
+          --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }} \
           --restart unless-stopped \
-          ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-image:${{ env.TIMESTAMP }}
+          ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-image:${{ env.TIMESTAMP }}
