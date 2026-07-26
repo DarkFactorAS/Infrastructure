@@ -71,7 +71,7 @@ jobs:
         echo "DOCKER_NAME=$DOCKER_NAME" >> $GITHUB_OUTPUT
 
     - name: Checkout repository
-      uses: actions/checkout@v4      
+      uses: actions/checkout@v6
 
     # Build the image using BuildKit secrets for better security
     # Note: Dockerfiles must use secret mounts instead of build args:
