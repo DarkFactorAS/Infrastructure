@@ -169,7 +169,7 @@ jobs:
     - name: Update version in version file
       if: inputs.versionfile != ''
       run: |
-        sed -i 's/public static string Version = "[^"]*";/public static string Version = "${{ steps.get-version.outputs.version }}";/' "${{ inputs.project_path }}/${{ inputs.versionfile }}"
+        sed -i 's/Version = "[^"]*";/Version = "${{ steps.get-version.outputs.version }}";/' "${{ inputs.project_path }}/${{ inputs.versionfile }}"
 
     # Build the image using BuildKit secrets for better security
     # Note: Dockerfiles must use secret mounts instead of build args:
