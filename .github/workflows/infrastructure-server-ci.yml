@@ -36,7 +36,7 @@ on:
         type: string
         description: "The GitHub Actions runner label used for runs-on."
         required: false
-        default: "self-hosted"
+        default: "ubuntu-latest"
 
 jobs:
   build:
