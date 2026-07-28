@@ -76,9 +76,18 @@ jobs:
     - name: Convert project name to lowercase for Docker name
       id: convert_to_lowercase
       run: |
-        UPPERCASE_VAR="${{ inputs.project_name }}"-${{ inputs.environment }}
-        DOCKER_NAME="${UPPERCASE_VAR,,}" # The ,, converts to lowercase
-        echo "DOCKER_NAME=$DOCKER_NAME" >> $GITHUB_OUTPUT
+        UPPERCASE_VAR="${{ inputs.project_name }}"
+        IMAGE_NAME="${UPPERCASE_VAR,,}" # The ,, converts to lowercase
+        echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_OUTPUT
+
+    - name: Convert project name to lowercase for Docker name
+      id: lowercase_repository
+      run: |
+        UPPERCASE_VAR="${{ github.repository }}"
+        REPOSITORY_NAME="${UPPERCASE_VAR,,}" # The ,, converts to lowercase
+        echo "REPOSITORY_NAME=$REPOSITORY_NAME" >> $GITHUB_OUTPUT
+
+
 
     - name: Checkout repository
       uses: actions/checkout@v6
@@ -126,7 +135,7 @@ jobs:
         context: .
         push: true
         file: ${{ inputs.project_path }}/${{ inputs.dockerfile }}
-        tags: ghcr.io/${{ github.repository }}/${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-image:latest
+        tags: ghcr.io/${{ steps.lowercase_repository.outputs.REPOSITORY_NAME }}/${{ steps.convert_to_lowercase.outputs.IMAGE_NAME }}-image:latest
         secrets: |
           NUGET_USERNAME=${{ secrets.NUGET_USERNAME }}
           NUGET_TOKEN=${{ secrets.NUGET_TOKEN }}
