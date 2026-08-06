@@ -1,0 +1,12 @@
+services:
+
+  github-runner-01:
+    container_name: github-runner-01
+    environment:
+      GH_URL: "${GH_URL}"
+      GH_TOKEN: "${GH_TOKEN}"
+      GH_RUNNER_NAME: "docker-runner-01"
+    build:
+      network: host
+      context: ./
+      dockerfile: ./Dockerfile
