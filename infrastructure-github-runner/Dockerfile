@@ -8,7 +8,6 @@ RUN apt-get update && apt-get install -y \
     curl \
     sudo \
     git \
-    docker.io \
     jq \
     build-essential \
     libssl-dev \
