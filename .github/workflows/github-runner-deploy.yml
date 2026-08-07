@@ -32,12 +32,14 @@ jobs:
     runs-on: self-hosted
     
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
     - name: Build Docker image
       env:
         DOCKER_BUILDKIT: 1
       run: |
         docker build -t github-runner:latest .
-
     - name: Stop old Docker container
       run: docker stop ${{ inputs.names_runners }} || true
 
