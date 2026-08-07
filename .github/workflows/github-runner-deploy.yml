@@ -21,7 +21,7 @@ on:
           - github-runner-01
           - github-runner-02
       gh_token:
-        description: 'GitHub Token'
+        description: 'GitHub Action Runner - Token'
         required: true
         type: string
       clean_build:
@@ -42,7 +42,7 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Build Docker image
       env:
