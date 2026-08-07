@@ -20,6 +20,15 @@ on:
         options:
           - github-runner-01
           - github-runner-02
+      clean_build:
+        description: 'Clean build'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - true
+          - false
+
 
 permissions:
   contents: read
@@ -36,7 +45,12 @@ jobs:
       env:
         DOCKER_BUILDKIT: 1
       run: |
-        docker build -t github-runner:latest .
+        if [ "${{ inputs.clean_build }}" = "true" ]; then
+          docker build --no-cache -t github-runner:latest .
+        else
+          docker build -t github-runner:latest .
+        fi
+
     - name: Stop old Docker container
       run: docker stop ${{ inputs.names_runners }} || true
 
