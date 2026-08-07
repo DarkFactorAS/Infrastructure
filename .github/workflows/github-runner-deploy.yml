@@ -3,7 +3,7 @@
 # Change the variables in this section to match your project
 #
 
-name: DFWeb BootStrap - Deploy
+name: DFWeb GitHub Runner - Deploy
 
 defaults:
   run:
@@ -20,6 +20,14 @@ on:
         options:
           - github-runner-01
           - github-runner-02
+      clean_build:
+        description: 'Clean build'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - true
+          - false
 
 permissions:
   contents: read
@@ -30,13 +38,18 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Build Docker image
       env:
         DOCKER_BUILDKIT: 1
       run: |
-        docker build -t github-runner:latest .
+        if [ "${{ inputs.clean_build }}" == "true" ]; then
+          docker build --no-cache -t github-runner:latest .
+        else
+          docker build -t github-runner:latest .
+        fi
+
     - name: Stop old Docker container
       run: docker stop ${{ inputs.names_runners }} || true
 
@@ -44,6 +57,8 @@ jobs:
       run: docker rm ${{ inputs.names_runners }} || true
 
     - name: Run Docker container
+      env:
+        LABELS: "self-hosted-ci,linux,x64"
       run: |
         DOCKER_GID=$(stat -c '%g' /var/run/docker.sock)
         docker run \
@@ -52,6 +67,7 @@ jobs:
           -e GH_URL="${{ vars.GH_URL }}" \
           -e GH_TOKEN="${{ secrets.GH_TOKEN }}" \
           -e GH_RUNNER_NAME="${{ inputs.names_runners }}" \
+          -e GH_RUNNER_LABEL="${{ env.LABELS }}" \
           --detach \
           --name ${{ inputs.names_runners }} \
           --restart unless-stopped \

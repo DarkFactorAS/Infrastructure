@@ -9,11 +9,12 @@ cd /home/docker/actions-runner
 : "${GH_URL:?GH_URL is required}"
 : "${GH_TOKEN:?GH_TOKEN is required}"
 : "${GH_RUNNER_NAME:?GH_RUNNER_NAME is required}"
+: "${GH_RUNNER_LABEL:?GH_RUNNER_LABEL is required}"
 
-echo "Starting GitHub Actions Runner ${GH_RUNNER_NAME} - URL: ${GH_URL}"
+echo "Starting GitHub Actions Runner ${GH_RUNNER_NAME} - URL: ${GH_URL} with labels: ${GH_RUNNER_LABEL}"
 
 # Configure and register the runner dynamically
-./config.sh --url "${GH_URL}" --token "${GH_TOKEN}" --name "${GH_RUNNER_NAME}" --unattended --replace
+./config.sh --url "${GH_URL}" --token "${GH_TOKEN}" --name "${GH_RUNNER_NAME}" --unattended --replace --no-default-labels --labels "${GH_RUNNER_LABEL}"
 
 RUNNER_PID=""
 cleanup() {
