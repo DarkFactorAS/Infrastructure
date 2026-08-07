@@ -1,0 +1,58 @@
+#
+# Build Deploy file for Docker container
+# Change the variables in this section to match your project
+#
+
+name: DFWeb BootStrap - Deploy
+
+defaults:
+  run:
+    working-directory: infrastructure-github-runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      names_runners:
+        description: 'Runner to deploy'
+        required: true
+        default: 'github-runner-01'
+        type: choice
+        options:
+          - github-runner-01
+          - github-runner-02
+
+permissions:
+  contents: read
+jobs:
+  deploy:
+    # To be able to deploy on the local server
+    runs-on: self-hosted
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Build Docker image
+      env:
+        DOCKER_BUILDKIT: 1
+      run: |
+        docker build -t github-runner:latest .
+    - name: Stop old Docker container
+      run: docker stop ${{ inputs.names_runners }} || true
+
+    - name: Delete old Docker container
+      run: docker rm ${{ inputs.names_runners }} || true
+
+    - name: Run Docker container
+      run: |
+        DOCKER_GID=$(stat -c '%g' /var/run/docker.sock)
+        docker run \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          --group-add "${DOCKER_GID}" \
+          -e GH_URL="${{ vars.GH_URL }}" \
+          -e GH_TOKEN="${{ secrets.GH_TOKEN }}" \
+          -e GH_RUNNER_NAME="${{ inputs.names_runners }}" \
+          --detach \
+          --name ${{ inputs.names_runners }} \
+          --restart unless-stopped \
+          github-runner:latest
