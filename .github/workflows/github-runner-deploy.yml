@@ -45,7 +45,7 @@ jobs:
       env:
         DOCKER_BUILDKIT: 1
       run: |
-        if [ "${{ inputs.clean_build }}" = "true" ]; then
+        if [ "${{ inputs.clean_build }}" == "true" ]; then
           docker build --no-cache -t github-runner:latest .
         else
           docker build -t github-runner:latest .
