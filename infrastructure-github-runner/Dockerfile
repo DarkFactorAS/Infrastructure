@@ -22,7 +22,7 @@ RUN useradd -m docker && usermod -aG sudo docker && echo "docker ALL=(ALL) NOPAS
 USER docker
 WORKDIR /home/docker
 
-# Download and extract the GitHub Actions runner (v2.320.0 as an example)
+# Download and extract the GitHub Actions runner (v2.336.0 as an example)
 RUN mkdir actions-runner && cd actions-runner \
     && curl -o actions-runner-linux-x64-2.336.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.336.0/actions-runner-linux-x64-2.336.0.tar.gz \
     && tar xzf ./actions-runner-linux-x64-2.336.0.tar.gz \
