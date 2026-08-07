@@ -20,6 +20,10 @@ on:
         options:
           - github-runner-01
           - github-runner-02
+      gh_token:
+        description: 'GitHub Token'
+        required: true
+        type: string
       clean_build:
         description: 'Clean build'
         required: true
@@ -28,7 +32,6 @@ on:
         options:
           - true
           - false
-
 
 permissions:
   contents: read
@@ -66,7 +69,7 @@ jobs:
           -v /var/run/docker.sock:/var/run/docker.sock \
           --group-add "${DOCKER_GID}" \
           -e GH_URL="${{ vars.GH_URL }}" \
-          -e GH_TOKEN="${{ secrets.GH_TOKEN }}" \
+          -e GH_TOKEN="${{ inputs.gh_token }}" \
           -e GH_RUNNER_NAME="${{ inputs.names_runners }}" \
           -e GH_RUNNER_LABEL="${{ env.LABELS }}" \
           --detach \
