@@ -5,7 +5,8 @@ services:
     environment:
       GH_URL: "${GH_URL}"
       GH_TOKEN: "${GH_TOKEN}"
-      GH_RUNNER_NAME: "github-runner-01"
+      GH_RUNNER_NAME: "dev-github-runner-01"
+      GH_RUNNER_LABEL: "self-hosted-ci,linux,x64"
     build:
       network: host
       context: ./

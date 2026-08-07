@@ -44,6 +44,8 @@ jobs:
       run: docker rm ${{ inputs.names_runners }} || true
 
     - name: Run Docker container
+      env:
+        LABELS: "self-hosted-ci,linux,x64"
       run: |
         DOCKER_GID=$(stat -c '%g' /var/run/docker.sock)
         docker run \
@@ -52,6 +54,7 @@ jobs:
           -e GH_URL="${{ vars.GH_URL }}" \
           -e GH_TOKEN="${{ secrets.GH_TOKEN }}" \
           -e GH_RUNNER_NAME="${{ inputs.names_runners }}" \
+          -e GH_RUNNER_LABEL="${{ env.LABELS }}" \
           --detach \
           --name ${{ inputs.names_runners }} \
           --restart unless-stopped \
