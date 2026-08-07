@@ -45,7 +45,10 @@ jobs:
 
     - name: Run Docker container
       run: |
+        DOCKER_GID=$(stat -c '%g' /var/run/docker.sock)
         docker run \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          --group-add "${DOCKER_GID}" \
           -e GH_URL="${{ vars.GH_URL }}" \
           -e GH_TOKEN="${{ secrets.GH_TOKEN }}" \
           -e GH_RUNNER_NAME="${{ inputs.names_runners }}" \
