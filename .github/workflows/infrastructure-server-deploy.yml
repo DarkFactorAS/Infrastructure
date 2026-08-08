@@ -103,8 +103,16 @@ jobs:
         
     - name: Convert project name to lowercase for Docker name
       id: convert_to_lowercase
+      env:
+        PROJECT_NAME: ${{ inputs.project_name }}
+        DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
       run: |
-        UPPERCASE_VAR="${{ inputs.project_name }}"-${{ inputs.environment }}
+        if ! [[ "$DEPLOY_ENVIRONMENT" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]]; then
+          echo "Invalid environment value: $DEPLOY_ENVIRONMENT"
+          exit 1
+        fi
+
+        UPPERCASE_VAR="${PROJECT_NAME}-${DEPLOY_ENVIRONMENT}"
         DOCKER_NAME="${UPPERCASE_VAR,,}" # The ,, converts to lowercase
         echo "DOCKER_NAME=$DOCKER_NAME" >> $GITHUB_OUTPUT
 
