@@ -74,6 +74,7 @@ jobs:
       TIMESTAMP: ${{ github.sha }}
       INTERNAL_PORT: 8080
       EXTERNAL_PORT: ${{ inputs.external_port }}
+      ASPNETCORE_ENVIRONMENT: ${{ inputs.environment }}
      
     # To be able to deploy on the local server
     runs-on: self-hosted
@@ -103,12 +104,12 @@ jobs:
     - name: Convert project name to lowercase for Docker name
       id: convert_to_lowercase
       run: |
-        UPPERCASE_VAR="${{ inputs.project_name }}"
+        UPPERCASE_VAR="${{ inputs.project_name }}"-${{ inputs.environment }}
         DOCKER_NAME="${UPPERCASE_VAR,,}" # The ,, converts to lowercase
         echo "DOCKER_NAME=$DOCKER_NAME" >> $GITHUB_OUTPUT
 
     - name: Checkout repository
-      uses: actions/checkout@v4      
+      uses: actions/checkout@v6
 
     # - name: Create config file
     #   uses: bluwy/substitute-string-action@v3
@@ -128,7 +129,7 @@ jobs:
     - name: Replace basic values in config file
       uses: datamonsters/replace-action@0f3e9781272167711334f3af148a5b90c47e9370 # v1
       with:
-        files: ${{ inputs.project_path }}${{ inputs.config_path }}/Config/appsettings.Production.json
+        files: ${{ inputs.project_path }}${{ inputs.config_path }}/Config/appsettings.${{ inputs.environment }}.json
         replacements: 'DATABASE.SERVER=${{ vars.DATABASE_SERVER }},DATABASE.PORT=${{ vars.DATABASE_PORT }},DATABASE.USERNAME=${{ secrets.DATABASE_USERNAME }},DATABASE.PASSWORD=${{ secrets.DATABASE_PASSWORD }},DATABASE.NAME=${{ vars.DATABASE_NAME }}'
 
     # Replace additional values in config file
@@ -136,7 +137,7 @@ jobs:
       if: contains(inputs.config_settings, 'accountserver')  
       uses: datamonsters/replace-action@0f3e9781272167711334f3af148a5b90c47e9370 # v1
       with:
-        files: ${{ inputs.project_path }}${{ inputs.config_path }}/Config/appsettings.Production.json
+        files: ${{ inputs.project_path }}${{ inputs.config_path }}/Config/appsettings.${{ inputs.environment }}.json
         replacements: 'ACCOUNTSERVER.URL=${{ secrets.ACCOUNTSERVER_URL }},ACCOUNTSERVER.CLIENTSECRET=${{ secrets.ACCOUNTSERVER_CLIENTSECRET }}'
 
     # Replace additional values in config file
@@ -144,7 +145,7 @@ jobs:
       if: contains(inputs.config_settings, 'bugreportweb')  
       uses: datamonsters/replace-action@0f3e9781272167711334f3af148a5b90c47e9370 # v1
       with:
-        files: ${{ inputs.project_path }}${{ inputs.config_path }}/Config/appsettings.Production.json
+        files: ${{ inputs.project_path }}${{ inputs.config_path }}/Config/appsettings.${{ inputs.environment }}.json
         replacements: 'BUGREPORTSERVER.URL=${{ vars.BUGREPORT_SERVER_URL }}'
 
     # Get the version from the program file
@@ -160,7 +161,7 @@ jobs:
         DATE="$(date +%y%m%d)"
         FULL_SHA=${{ github.sha }}
         SHORT_SHA=$(echo "${FULL_SHA}" | cut -c1-6)
-        VERSION="$MAJOR.$SHORT_SHA.$DATE"
+        VERSION="$MAJOR.$DATE.$SHORT_SHA"
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Determined version: $VERSION"
 
@@ -168,7 +169,7 @@ jobs:
     - name: Update version in version file
       if: inputs.versionfile != ''
       run: |
-        sed -i 's/public static string Version = "[^"]*";/public static string Version = "${{ steps.get-version.outputs.version }}";/' "${{ inputs.project_path }}/${{ inputs.versionfile }}"
+        sed -i 's/Version = "[^"]*";/Version = "${{ steps.get-version.outputs.version }}";/' "${{ inputs.project_path }}/${{ inputs.versionfile }}"
 
     # Build the image using BuildKit secrets for better security
     # Note: Dockerfiles must use secret mounts instead of build args:
@@ -185,21 +186,22 @@ jobs:
       run: |
         docker build . \
           --file ${{ inputs.project_path }}/${{ inputs.dockerfile }} \
-          --tag ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-image:${{ env.TIMESTAMP }} \
+          --tag ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-image:${{ env.TIMESTAMP }} \
           --secret id=nuget_username,env=NUGET_USERNAME \
           --secret id=nuget_token,env=NUGET_TOKEN
 
     - name: Stop old Docker container
-      run: docker stop ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} || true
+      run: docker stop ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }} || true
 
     - name: Delete old Docker container
-      run: docker rm ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} || true
+      run: docker rm ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }} || true
 
     - name: Run Docker container
       run: |
         docker run \
+          -e ASPNETCORE_ENVIRONMENT=${{ env.ASPNETCORE_ENVIRONMENT }} \
           --detach \
           --publish ${{ env.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} \
-          --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} \
+          --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }} \
           --restart unless-stopped \
-          ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-image:${{ env.TIMESTAMP }}
+          ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-image:${{ env.TIMESTAMP }}
