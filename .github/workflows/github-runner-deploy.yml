@@ -1,0 +1,78 @@
+#
+# Build Deploy file for Docker container
+# Change the variables in this section to match your project
+#
+
+name: GitHub Runner - Deploy
+
+defaults:
+  run:
+    working-directory: infrastructure-github-runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      names_runners:
+        description: 'Runner to deploy'
+        required: true
+        default: 'github-runner-01'
+        type: choice
+        options:
+          - github-runner-01
+          - github-runner-02
+      gh_token:
+        description: 'GitHub Action Runner - Token'
+        required: true
+        type: string
+      clean_build:
+        description: 'Clean build'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - true
+          - false
+
+permissions:
+  contents: read
+jobs:
+  deploy:
+    # To be able to deploy on the local server
+    runs-on: self-hosted
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Build Docker image
+      env:
+        DOCKER_BUILDKIT: 1
+      run: |
+        if [ "${{ inputs.clean_build }}" == "true" ]; then
+          docker build --no-cache -t github-runner:latest .
+        else
+          docker build -t github-runner:latest .
+        fi
+
+    - name: Stop old Docker container
+      run: docker stop ${{ inputs.names_runners }} || true
+
+    - name: Delete old Docker container
+      run: docker rm ${{ inputs.names_runners }} || true
+
+    - name: Run Docker container
+      env:
+        LABELS: "self-hosted-ci,linux,x64"
+      run: |
+        DOCKER_GID=$(stat -c '%g' /var/run/docker.sock)
+        docker run \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          --group-add "${DOCKER_GID}" \
+          -e GH_URL="${{ vars.GH_URL }}" \
+          -e GH_TOKEN="${{ inputs.gh_token }}" \
+          -e GH_RUNNER_NAME="${{ inputs.names_runners }}" \
+          -e GH_RUNNER_LABEL="${{ env.LABELS }}" \
+          --detach \
+          --name ${{ inputs.names_runners }} \
+          --restart unless-stopped \
+          github-runner:latest
