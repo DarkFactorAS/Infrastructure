@@ -35,6 +35,10 @@ on:
       environment:
         required: true
         type: string
+      external_port:
+        required: true
+        default: 0
+        type: number
       project_path:
         required: false
         default: "."
@@ -69,8 +73,7 @@ jobs:
     env:
       TIMESTAMP: ${{ github.sha }}
       INTERNAL_PORT: 8080
-#      NUGET_USERNAME: ${{ secrets.NUGET_USERNAME }}
-#      NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
+      EXTERNAL_PORT: ${{ inputs.external_port }}
      
     # To be able to deploy on the local server
     runs-on: self-hosted
@@ -86,10 +89,6 @@ jobs:
       run: |
         if [ -z "${{ secrets.NUGET_USERNAME }}" ] || [ -z "${{ secrets.NUGET_TOKEN }}" ]; then
           echo "One or more required secrets are not set. Please check the organization and environment secrets."
-          exit 1
-        fi
-        if [ -z "${{ vars.EXTERNAL_PORT }}" ] || [ "${{ vars.EXTERNAL_PORT }}" == "0" ]; then
-          echo "External port is not set or is set to 0. Please check the environment variables."
           exit 1
         fi
 
@@ -200,7 +199,7 @@ jobs:
       run: |
         docker run \
           --detach \
-          --publish ${{ vars.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} \
+          --publish ${{ env.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} \
           --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }} \
           --restart unless-stopped \
           ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }}-${{ inputs.environment }}-image:${{ env.TIMESTAMP }}
