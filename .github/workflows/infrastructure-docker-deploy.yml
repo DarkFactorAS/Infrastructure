@@ -1,0 +1,113 @@
+#
+# Build Deploy file for Docker container
+#
+
+name: General - Deploy Server Docker Container
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: .
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      external_port:
+        required: true
+        default: 0
+        type: number
+      project_name:
+        required: true
+        type: string
+      app_name:
+        required: true
+        type: string
+      config_path:
+        required: false
+        default: "~/www-config"
+        type: string
+      image_name:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+
+    # Timeout for the job
+    timeout-minutes: 15
+
+    # Static variables used in the workflow
+    env:
+      INTERNAL_PORT: 8080
+      EXTERNAL_PORT: ${{ inputs.external_port }}
+      ASPNETCORE_ENVIRONMENT: ${{ inputs.environment }}
+      CONFIG_PATH: ${{ inputs.config_path }}
+      CONFIG_ENCRYPTIONNAME: "${{ inputs.app_name }}_EncryptionKey"
+      CONFIG_ENCRYPTIONKEY: ${{ secrets.CONFIG_ENCRYPTIONKEY }}
+
+    # Required permissions to read packages
+    permissions:
+      contents: read
+      packages: read
+
+    # To be able to deploy on the local server
+    runs-on: self-hosted
+
+    environment: ${{ inputs.environment }}
+
+    steps:
+
+    #
+    # Verify required secrets and variables are set
+    #
+    - name: Verify secrets and variables are set
+      run: |
+        if [ -z "${{ secrets.NUGET_USERNAME }}" ] || [ -z "${{ secrets.NUGET_TOKEN }}" ]; then
+          echo "One or more required secrets are not set. Please check the organization and environment secrets."
+          exit 1
+        fi
+        
+    - name: Convert project name to lowercase for Docker name
+      id: convert_to_lowercase
+      run: |
+        UPPERCASE_VAR="${{ inputs.project_name }}"-${{ inputs.environment }}
+        DOCKER_NAME="${UPPERCASE_VAR,,}" # The ,, converts to lowercase
+        echo "DOCKER_NAME=$DOCKER_NAME" >> $GITHUB_OUTPUT
+
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    # Log in to GitHub Container Registry
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v4
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.NUGET_TOKEN }}
+
+    - name: Pull the Docker image
+      run: |    
+        docker pull ${{ inputs.image_name }}
+
+    - name: Stop old Docker container
+      run: docker stop ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }} || true
+
+    - name: Delete old Docker container
+      run: docker rm ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }} || true
+
+    - name: Run Docker container
+      run: |
+        docker run \
+          -e ASPNETCORE_ENVIRONMENT=${{ env.ASPNETCORE_ENVIRONMENT }} \
+          -e ${{ env.CONFIG_ENCRYPTIONNAME }}=${{ env.CONFIG_ENCRYPTIONKEY }} \
+          -v ${{ env.CONFIG_PATH }}:/app/Config \
+          --detach \
+          --publish ${{ env.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} \
+          --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }} \
+          --restart unless-stopped \
+          ${{ inputs.image_name }}
