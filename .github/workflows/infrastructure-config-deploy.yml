@@ -92,7 +92,7 @@ jobs:
 
     - name: Verify Config template
       run: |
-        if [ -z "${{ env.CONFIG_TEMPLATE }}" ]; then
+        if [ -z "$CONFIG_TEMPLATE" ]; then
           echo "Config template is not set. Please check the repository and environment variables."
           exit 1
         fi
