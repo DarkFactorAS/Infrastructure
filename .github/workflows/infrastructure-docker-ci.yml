@@ -32,24 +32,19 @@ on:
         required: false
         default: "Dockerfile"
         type: string
-      runner_label:
-        type: string
-        description: "The GitHub Actions runner label used for runs-on."
-        required: false
-        default: "ubuntu-latest"
 
 jobs:
   build:
 
     # Timeout for the job
-    timeout-minutes: 15
+    timeout-minutes: 5
 
     # Static variables used in the workflow
     env:
       TIMESTAMP: ${{ github.sha }}
      
     # To build on the local server
-    runs-on: ${{ inputs.runner_label }}
+    runs-on: ubuntu-latest
 
     steps:
 
@@ -71,7 +66,7 @@ jobs:
         echo "DOCKER_NAME=$DOCKER_NAME" >> $GITHUB_OUTPUT
 
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v4      
 
     # Build the image using BuildKit secrets for better security
     # Note: Dockerfiles must use secret mounts instead of build args:

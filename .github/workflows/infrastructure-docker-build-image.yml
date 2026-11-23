@@ -20,10 +20,11 @@
 #     secrets.ACCOUNTSERVER_URL
 #     secrets.ACCOUNTSERVER_CLIENTSECRET
 
-name: General - Build & Push Docker Image (GHCR)
+name: General - Build Docker Image
 
 permissions:
   contents: read
+  actions: write 
 
 defaults:
   run:
@@ -47,14 +48,15 @@ on:
         required: false
         default: ""
         type: string
-      runner_label:
-        type: string
-        description: "The GitHub Actions runner label used for runs-on."
-        required: false
-        default: ubuntu-latest
+    outputs:
+      docker_image_name:
+        description: "Fully-qualified image name pushed to GHCR"
+        value: ${{ jobs.build.outputs.docker_image_name }}
 
 jobs:
   build:
+    outputs:
+      docker_image_name: ${{ steps.set_image_name.outputs.image_name }}
 
     # Timeout for the job
     timeout-minutes: 15
@@ -63,8 +65,7 @@ jobs:
     env:
       TIMESTAMP: ${{ github.sha }}
      
-    # To be able to deploy on the local server
-    runs-on: ${{ inputs.runner_label }}
+    runs-on: ubuntu-latest
 
     steps:
 
@@ -73,10 +74,24 @@ jobs:
     #
     - name: Verify secrets and variables are set
       run: |
-        if [ -z "${{ secrets.NUGET_USERNAME }}" ] || [ -z "${{ secrets.NUGET_TOKEN }}" ]; then
+        if [ -z "${{ secrets.NUGET_TOKEN }}" ]; then
+          echo "NUGET_TOKEN secret is not set. Please check the organization and environment secrets."
+          exit 1
+        fi
+
+        if [ -z "${{ secrets.NUGET_USERNAME }}" ] && [ -z "${{ vars.NUGET_USERNAME }}" ]; then
           echo "One or more required secrets are not set. Please check the organization and environment secrets."
           exit 1
         fi
+
+    - name: Resolve NuGet username
+      id: resolve-nuget-username
+      run: |
+        USERNAME="${{ secrets.NUGET_USERNAME }}"
+        if [ -z "$USERNAME" ]; then
+          USERNAME="${{ vars.NUGET_USERNAME }}"
+        fi
+        echo "username=$USERNAME" >> $GITHUB_OUTPUT
         
     - name: Convert project name to lowercase for Docker name
       id: convert_to_lowercase
@@ -116,7 +131,8 @@ jobs:
     - name: Update version in version file
       if: inputs.versionfile != ''
       run: |
-        sed -i 's/Version = "[^"]*";/Version = "${{ steps.get-version.outputs.version }}";/' "${{ inputs.project_path }}/${{ inputs.versionfile }}"
+        VERSION="${{ steps.get-version.outputs.version }}"
+        sed -i "s/Version = \"[^\"]*\";/Version = \"$VERSION\";/" "${{ inputs.project_path }}/${{ inputs.versionfile }}"
 
     # Set up Docker Buildx (Required for BuildKit features)
     - name: Set up Docker Buildx
@@ -130,6 +146,11 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.NUGET_TOKEN }}
 
+    - name: Set image name
+      id: set_image_name
+      run: |
+        echo "image_name=ghcr.io/${{ steps.lowercase_repository.outputs.REPOSITORY_NAME }}/${{ steps.convert_to_lowercase.outputs.IMAGE_NAME }}-image:latest" >> $GITHUB_OUTPUT
+       
     # Build and push image with native GHA caching
     - name: Build and push
       uses: docker/build-push-action@v6
@@ -137,9 +158,9 @@ jobs:
         context: .
         push: true
         file: ${{ inputs.project_path }}/${{ inputs.dockerfile }}
-        tags: ghcr.io/${{ steps.lowercase_repository.outputs.REPOSITORY_NAME }}/${{ steps.convert_to_lowercase.outputs.IMAGE_NAME }}-image:latest
+        tags: ${{ steps.set_image_name.outputs.image_name }}
         secrets: |
-          "NUGET_USERNAME=${{ secrets.NUGET_USERNAME }}"
-          "NUGET_TOKEN=${{ secrets.NUGET_TOKEN }}"
+          nuget_username=${{ steps.resolve-nuget-username.outputs.username }}
+          nuget_token=${{ secrets.NUGET_TOKEN }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
