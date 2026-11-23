@@ -183,9 +183,9 @@ jobs:
             "DATABASE.PASSWORD",
             "DATABASE.NAME",
         ]
-        missing = [token for token in unresolved_required if token in result]
         if missing:
-          print(f"Warning: unresolved placeholders in CONFIG: {', '.join(missing)}", file=sys.stderr)
+            print(f"Error: unresolved placeholders in CONFIG: {', '.join(missing)}", file=sys.stderr)
+            sys.exit(1)
 
         # Validate that generated output is valid JSON.
         try:
