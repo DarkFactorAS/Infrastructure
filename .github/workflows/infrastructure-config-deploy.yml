@@ -98,8 +98,13 @@ jobs:
         fi
 
     - name: Verify DB secrets
+      env:
+        DATABASE_SERVER: ${{ vars.DATABASE_SERVER }}
+        DATABASE_PORT: ${{ vars.DATABASE_PORT }}
+        DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+        DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
       run: |
-        if [ -z "${{ vars.DATABASE_SERVER }}" ] || [ -z "${{ vars.DATABASE_PORT }}" ] || [ -z "${{ secrets.DATABASE_USERNAME }}" ] || [ -z "${{ secrets.DATABASE_PASSWORD }}" ]; then
+        if [ -z "$DATABASE_SERVER" ] || [ -z "$DATABASE_PORT" ] || [ -z "$DATABASE_USERNAME" ] || [ -z "$DATABASE_PASSWORD" ]; then
           echo "Database settings are not set. Please check the secrets."
           exit 1
         fi
