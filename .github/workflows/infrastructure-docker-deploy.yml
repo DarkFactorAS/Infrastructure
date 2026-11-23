@@ -65,10 +65,12 @@ jobs:
     #
     # Verify required secrets and variables are set
     #
-    - name: Verify secrets and variables are set
+    - name: Verify required registry token is set
+      env:
+        NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
       run: |
-        if [ -z "${{ secrets.NUGET_USERNAME }}" ] || [ -z "${{ secrets.NUGET_TOKEN }}" ]; then
-          echo "One or more required secrets are not set. Please check the organization and environment secrets."
+        if [ -z "$NUGET_TOKEN" ]; then
+          echo "NUGET_TOKEN secret is not set. Please check the environment secrets."
           exit 1
         fi
         
