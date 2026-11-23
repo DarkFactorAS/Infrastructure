@@ -199,7 +199,7 @@ jobs:
             print(f"Error: generated CONFIG is not valid JSON: {exc}", file=sys.stderr)
             sys.exit(1)
 
-        output_path = pathlib.Path(os.environ["CONFIG_PATH"]) / os.environ["CONFIG_FILE"]
+        output_path = pathlib.Path(os.path.expanduser(os.environ["CONFIG_PATH"])) / os.environ["CONFIG_FILE"]
         output_path.write_text(result + "\n", encoding="utf-8")
 
         with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env_file:
