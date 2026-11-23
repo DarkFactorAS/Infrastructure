@@ -107,7 +107,7 @@ jobs:
         docker run \
           -e ASPNETCORE_ENVIRONMENT=${{ env.ASPNETCORE_ENVIRONMENT }} \
           -e ${{ env.CONFIG_ENCRYPTIONNAME }}=${{ env.CONFIG_ENCRYPTIONKEY }} \
-          -v ${{ env.CONFIG_PATH }}:/app/Config \
+          -v "${CONFIG_PATH/#\~/$HOME}:/app/Config" \
           --detach \
           --publish ${{ env.EXTERNAL_PORT }}:${{ env.INTERNAL_PORT }} \
           --name ${{ steps.convert_to_lowercase.outputs.DOCKER_NAME }} \
